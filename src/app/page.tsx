@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import { useState, FormEvent, useEffect } from "react"
 import type {
   SkyObjectsResponse,
   SkyObjectsErrorResponse,
@@ -8,6 +8,114 @@ import type {
 } from "../../types/skyObjects"
 
 type LoadingState = "idle" | "loading" | "success" | "error"
+
+interface CountdownTime {
+  days: number
+  hours: number
+  minutes: number
+  seconds: number
+}
+
+/**
+ * Calculates the winter solstice date for a given year
+ * Winter solstice typically occurs on December 21 or 22
+ */
+function getWinterSolstice(year: number): Date {
+  // Winter solstice is usually December 21 at around 10:00 UTC
+  // This is an approximation - for exact times, you'd need astronomical calculations
+  // December 21, 10:00 UTC is a good approximation
+  const solstice = new Date(Date.UTC(year, 11, 21, 10, 0, 0))
+
+  // Adjust for the actual year's solstice (can vary by a day)
+  // For simplicity, we'll use Dec 21 at 10:00 UTC
+  return solstice
+}
+
+/**
+ * Calculates countdown to winter solstice
+ * TODO: Accept lat/lon parameters to calculate exact solstice time for that location's timezone
+ */
+function calculateCountdown(): CountdownTime | null {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+
+  // Get winter solstice for current year
+  let solstice = getWinterSolstice(currentYear)
+
+  // If solstice has passed this year, get next year's
+  if (solstice < now) {
+    solstice = getWinterSolstice(currentYear + 1)
+  }
+
+  // TODO: Use lat/lon to get timezone and calculate exact solstice time for that location
+  // For now, we use the browser's local timezone
+
+  const diff = solstice.getTime() - now.getTime()
+
+  if (diff <= 0) {
+    return null
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+  return { days, hours, minutes, seconds }
+}
+
+/**
+ * Countdown Timer Component
+ */
+function SolsticeCountdown({ lat, lon }: { lat?: number; lon?: number }) {
+  const [countdown, setCountdown] = useState<CountdownTime | null>(null)
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      // TODO: Pass lat/lon when implementing timezone-specific calculations
+      setCountdown(calculateCountdown())
+    }
+
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+
+    return () => clearInterval(interval)
+  }, [lat, lon])
+
+  if (!countdown) {
+    return null
+  }
+
+  return (
+    <div className="fixed bottom-4 left-4 z-20 rounded-lg bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-4 shadow-lg">
+      <div className="text-xs text-gray-400 mb-2">Winter Solstice</div>
+      <div className="flex gap-3 text-white">
+        <div className="text-center">
+          <div className="text-2xl font-bold">{countdown.days}</div>
+          <div className="text-xs text-gray-400">days</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold">
+            {countdown.hours.toString().padStart(2, "0")}
+          </div>
+          <div className="text-xs text-gray-400">hours</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold">
+            {countdown.minutes.toString().padStart(2, "0")}
+          </div>
+          <div className="text-xs text-gray-400">min</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold">
+            {countdown.seconds.toString().padStart(2, "0")}
+          </div>
+          <div className="text-xs text-gray-400">sec</div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function SolsticeSkyViewer() {
   const [location, setLocation] = useState("")
@@ -171,9 +279,12 @@ export default function SolsticeSkyViewer() {
         </div>
       </div>
 
+      {/* Countdown Timer */}
+      <SolsticeCountdown lat={data?.location.lat} lon={data?.location.lon} />
+
       {/* Credit line */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-        <p className="text-xs text-gray-500/60 text-center">
+      <div className="fixed bottom-4 right-4 z-20">
+        <p className="text-xs text-gray-500/60 text-right">
           Background styling by{" "}
           <a
             href="https://codepen.io/agoodwin"
