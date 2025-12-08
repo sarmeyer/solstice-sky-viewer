@@ -6,7 +6,6 @@ import type {
   SkyObjectsErrorResponse,
   SkyObject,
 } from "../../../types/skyObjects"
-import Image from "next/image"
 
 type LoadingState = "idle" | "loading" | "success" | "error"
 
@@ -170,6 +169,21 @@ export default function SolsticeSkyViewer() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Credit line */}
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+        <p className="text-xs text-gray-500/60 text-center">
+          Background styling by{" "}
+          <a
+            href="https://codepen.io/agoodwin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400/80 hover:text-gray-300 underline"
+          >
+            agoodwin
+          </a>
+        </p>
       </div>
     </div>
   )
