@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
 import type {
   SkyObjectsResponse,
   SkyObjectsErrorResponse,
-  SkyObject,
   Location,
-} from "@/types/skyObjects";
+} from "../../../../types/skyObjects"
+import { geocodeLocation } from "./geocode"
+import { fetchAstronomyData, mapAstronomyDataToSkyObjects } from "./astronomy"
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const locationQuery = searchParams.get("location");
+  const searchParams = request.nextUrl.searchParams
+  const locationQuery = searchParams.get("location")
 
   // Check if location parameter is missing
   if (!locationQuery || locationQuery.trim() === "") {
@@ -17,66 +18,84 @@ export async function GET(request: NextRequest) {
         code: "INVALID_LOCATION",
         message: "Location parameter is required.",
       },
-    };
-    return NextResponse.json(errorResponse, { status: 400 });
+    }
+    return NextResponse.json(errorResponse, { status: 400 })
   }
 
-  // Generate current date in ISO format (YYYY-MM-DD)
-  const today = new Date();
-  const date = today.toISOString().split("T")[0];
+  try {
+    // Step 1: Geocode location to get lat/lon
+    let geocodeResult
+    try {
+      geocodeResult = await geocodeLocation(locationQuery.trim())
+    } catch (error) {
+      const errorResponse: SkyObjectsErrorResponse = {
+        error: {
+          code: "INVALID_LOCATION",
+          message: `Could not resolve location: ${error}`,
+        },
+      }
+      return NextResponse.json(errorResponse, { status: 400 })
+    }
 
-  // Fake location resolution - just echo back the query with a resolved name
-  const location: Location = {
-    query: locationQuery,
-    resolvedName: `${locationQuery}, USA`,
-    lat: 39.7392, // Default to Denver coordinates for fake data
-    lon: -104.9903,
-  };
+    const location: Location = {
+      query: locationQuery,
+      resolvedName: geocodeResult.resolvedName,
+      lat: geocodeResult.lat,
+      lon: geocodeResult.lon,
+    }
 
-  // Generate fake sky objects (1-5 objects as per tests)
-  // Calculate next day for setTime
-  const nextDay = new Date(today);
-  nextDay.setDate(nextDay.getDate() + 1);
-  const nextDate = nextDay.toISOString().split("T")[0];
+    // Step 2: Fetch astronomy data from Open-Meteo
+    let astronomyData
+    try {
+      astronomyData = await fetchAstronomyData(
+        geocodeResult.lat,
+        geocodeResult.lon
+      )
+    } catch (error) {
+      const errorResponse: SkyObjectsErrorResponse = {
+        error: {
+          code: "UPSTREAM_ERROR",
+          message: `Failed to fetch astronomy data: ${error}`,
+        },
+      }
+      return NextResponse.json(errorResponse, { status: 500 })
+    }
 
-  const objects: SkyObject[] = [
-    {
-      id: "jupiter",
-      name: "Jupiter",
-      type: "planet",
-      visibility: "good",
-      riseTime: `${date}T19:03:00Z`,
-      setTime: `${nextDate}T06:15:00Z`,
-      magnitude: -2.3,
-      note: "Bright in the southeast after sunset.",
-    },
-    {
-      id: "sirius",
-      name: "Sirius",
-      type: "star",
-      visibility: "good",
-      riseTime: `${date}T18:30:00Z`,
-      setTime: `${nextDate}T05:45:00Z`,
-      magnitude: -1.46,
-      note: "The brightest star in the night sky.",
-    },
-    {
-      id: "orion",
-      name: "Orion",
-      type: "constellation",
-      visibility: "ok",
-      riseTime: `${date}T20:00:00Z`,
-      setTime: `${nextDate}T07:30:00Z`,
-      note: "Visible in the eastern sky.",
-    },
-  ];
+    // Step 3: Get current date in ISO format (YYYY-MM-DD)
+    const today = new Date()
+    const date = today.toISOString().split("T")[0]
 
-  const response: SkyObjectsResponse = {
-    location,
-    date,
-    objects,
-  };
+    // Step 4: Map astronomy data to SkyObjects
+    const objects = mapAstronomyDataToSkyObjects(astronomyData, date)
 
-  return NextResponse.json(response, { status: 200 });
+    // Ensure we have at least 1 object (should always have Sun and Moon)
+    if (objects.length === 0) {
+      const errorResponse: SkyObjectsErrorResponse = {
+        error: {
+          code: "UPSTREAM_ERROR",
+          message: "No astronomy data available.",
+        },
+      }
+      return NextResponse.json(errorResponse, { status: 500 })
+    }
+
+    const response: SkyObjectsResponse = {
+      location,
+      date,
+      objects,
+    }
+
+    return NextResponse.json(response, { status: 200 })
+  } catch (error) {
+    // Catch any unexpected errors
+    const errorResponse: SkyObjectsErrorResponse = {
+      error: {
+        code: "UNKNOWN",
+        message: `An unexpected error occurred: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      },
+    }
+    return NextResponse.json(errorResponse, { status: 500 })
+  }
 }
-
