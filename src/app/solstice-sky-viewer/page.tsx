@@ -4,8 +4,9 @@ import { useState, FormEvent } from "react"
 import type {
   SkyObjectsResponse,
   SkyObjectsErrorResponse,
-  SkyObject
+  SkyObject,
 } from "../../../types/skyObjects"
+import Image from "next/image"
 
 type LoadingState = "idle" | "loading" | "success" | "error"
 
@@ -67,10 +68,15 @@ export default function SolsticeSkyViewer() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black">
+    // <div class="background-container">
+    <div className="background-container min-h-screen relative overflow-hidden night-sky">
       {/* Starfield background */}
-      <div className="absolute inset-0 starfield" />
-
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/moon.png" alt="moon" />
+      <div className="stars"></div>
+      <div className="twinkling"></div>
+      <div className="clouds"></div>
+      {/* <div className="absolute inset-0 starfield" /> */}
       {/* Main content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-2xl">
@@ -87,7 +93,7 @@ export default function SolsticeSkyViewer() {
                 <input
                   type="text"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={e => setLocation(e.target.value)}
                   placeholder="Enter city, state, zipcode, or country"
                   className="flex-1 px-4 py-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={state === "loading"}
@@ -134,7 +140,7 @@ export default function SolsticeSkyViewer() {
                 </div>
 
                 <div className="space-y-3">
-                  {data.objects.map((obj) => (
+                  {data.objects.map(obj => (
                     <div
                       key={obj.id}
                       className="rounded-lg bg-gray-800/50 border border-gray-700 p-4 hover:bg-gray-800/70 transition-colors"
