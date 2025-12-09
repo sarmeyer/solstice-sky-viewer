@@ -3,67 +3,9 @@ import type {
   StellaChatRequest,
   StellaChatSuccess,
   StellaChatError,
-  StellaChatMessage,
 } from "../../../../types/stellaChat";
 import type { SkyObject } from "../../../../types/skyObjects";
-
-/**
- * Calls the LLM model to generate Stella's reply
- * This is a placeholder that can be replaced with a real LLM integration
- */
-async function callStellaModel(
-  prompt: string
-): Promise<string> {
-  // TODO: Replace with actual LLM API call (e.g., OpenAI, Anthropic, etc.)
-  // For now, return a simple mock response
-  // In a real implementation, this would:
-  // 1. Call the LLM API with the prompt
-  // 2. Handle errors (timeouts, rate limits, etc.)
-  // 3. Return the generated text
-  
-  // Mock response for testing
-  return "I'd suggest starting with Jupiter! It's bright and easy to spot in the southeast after sunset. Look for a steady, non-twinkling point of light—that's how you can tell it's a planet rather than a star. Happy stargazing! 🌟";
-}
-
-/**
- * Constructs the prompt for Stella based on the request
- */
-function buildStellaPrompt(
-  location: string,
-  date: string,
-  objects: SkyObject[],
-  messages: StellaChatMessage[]
-): string {
-  // Build a compact summary of visible objects
-  const objectsSummary = objects
-    .map((obj) => {
-      const parts = [`${obj.name} (${obj.type})`];
-      if (obj.visibility) parts.push(`visibility: ${obj.visibility}`);
-      if (obj.note) parts.push(`note: ${obj.note}`);
-      return `- ${parts.join(", ")}`;
-    })
-    .join("\n");
-
-  // Build conversation history
-  const conversationHistory = messages
-    .map((msg) => `${msg.role === "user" ? "User" : "Stella"}: ${msg.content}`)
-    .join("\n");
-
-  const prompt = `You are Stella, a friendly and slightly whimsical sky guide who helps people understand the objects visible in their night sky. You are beginner-friendly, concise, and astronomy-focused.
-
-Context:
-- Location: ${location}
-- Date: ${date}
-- Visible objects tonight:
-${objectsSummary}
-
-Conversation so far:
-${conversationHistory}
-
-Please respond as Stella with a helpful, friendly, and concise answer. Keep your response grounded in the provided sky objects. Be a little whimsical but stay informative.`;
-
-  return prompt;
-}
+import { callStellaModel } from "../../../lib/stella/callStellaModel";
 
 /**
  * Validates the request body according to the spec
@@ -161,13 +103,17 @@ export async function POST(request: NextRequest) {
 
     const { location, date, objects, messages } = body as StellaChatRequest;
 
-    // Build prompt
-    const prompt = buildStellaPrompt(location, date, objects, messages);
+    const requestData: StellaChatRequest = {
+      location,
+      date,
+      objects,
+      messages,
+    };
 
     // Call LLM model
     let reply: string;
     try {
-      reply = await callStellaModel(prompt);
+      reply = await callStellaModel(requestData);
     } catch (error) {
       // Model call failed - return 502 with MODEL_ERROR
       const errorResponse: StellaChatError = {

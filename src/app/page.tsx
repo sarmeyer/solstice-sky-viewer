@@ -7,6 +7,7 @@ import type {
   SkyObject,
 } from "../../types/skyObjects"
 import Stella from "../components/Stella"
+import StellaChatWindow from "../components/StellaChatWindow"
 
 type LoadingState = "idle" | "loading" | "success" | "error"
 
@@ -123,6 +124,7 @@ export default function SolsticeSkyViewer() {
   const [state, setState] = useState<LoadingState>("idle")
   const [data, setData] = useState<SkyObjectsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -284,7 +286,18 @@ export default function SolsticeSkyViewer() {
       <SolsticeCountdown lat={data?.location.lat} lon={data?.location.lon} />
 
       {/* Stella - only show after successful sky objects fetch */}
-      {state === "success" && data && <Stella />}
+      {state === "success" && data && (
+        <Stella onClick={() => setIsChatOpen(true)} />
+      )}
+
+      {/* Stella Chat Window */}
+      {state === "success" && data && (
+        <StellaChatWindow
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          skyData={data}
+        />
+      )}
 
       {/* Credit line */}
       <div
