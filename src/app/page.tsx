@@ -6,6 +6,7 @@ import type {
   SkyObjectsErrorResponse,
   SkyObject,
 } from "../../types/skyObjects"
+import Stella from "../components/Stella"
 
 type LoadingState = "idle" | "loading" | "success" | "error"
 
@@ -282,8 +283,16 @@ export default function SolsticeSkyViewer() {
       {/* Countdown Timer */}
       <SolsticeCountdown lat={data?.location.lat} lon={data?.location.lon} />
 
+      {/* Stella - only show after successful sky objects fetch */}
+      {state === "success" && data && <Stella />}
+
       {/* Credit line */}
-      <div className="fixed bottom-4 right-4 z-20">
+      <div
+        className="fixed right-4 z-20"
+        style={{
+          bottom: "16px",
+        }}
+      >
         <p className="text-xs text-gray-500/60 text-right">
           Background styling by{" "}
           <a
