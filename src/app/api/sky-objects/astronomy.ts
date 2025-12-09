@@ -1,36 +1,67 @@
 import type { SkyObject } from "../../../../types/skyObjects"
 
-interface OpenMeteoResponse {
-  daily: {
-    sunrise: string[]
-    sunset: string[]
-    moonrise: string[]
-    moonset: string[]
-    moon_phase: number[]
+interface USNOResponse {
+  apiversion: string
+  geometry: {
+    coordinates: [number, number]
+    type: string
   }
+  properties: {
+    data: {
+      sundata: Array<{
+        phen: string
+        time: string
+      }>
+      moondata?: Array<{
+        phen: string
+        time: string
+      }>
+      curphase?: string
+      fracillum?: string
+      day: number
+      month: number
+      year: number
+      tz: number
+    }
+  }
+  type: string
 }
 
 /**
- * Fetches astronomy data from Open-Meteo API
+ * Fetches astronomy data from USNO RSTT oneday API
  */
 export async function fetchAstronomyData(
   lat: number,
-  lon: number
-): Promise<OpenMeteoResponse> {
-  const url = new URL("https://api.open-meteo.com/v1/forecast")
-  url.searchParams.set("latitude", lat.toString())
-  url.searchParams.set("longitude", lon.toString())
-  url.searchParams.set("daily", "sunrise,sunset")
-  url.searchParams.set("timezone", "auto")
-  console.log(url.toString())
+  lon: number,
+  date: string
+): Promise<USNOResponse> {
+  // Format date as YYYY-MM-DD
+  const formattedDate = date.split("T")[0] // Extract date part if ISO datetime string
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(formattedDate)) {
+    throw new Error(`Invalid date format. Expected YYYY-MM-DD, got: ${date}`)
+  }
 
-  const response = await fetch(url.toString())
+  // Build URL with encoded parameters
+  const coords = `${lat},${lon}`
+  const url = `https://aa.usno.navy.mil/api/rstt/oneday?date=${encodeURIComponent(
+    formattedDate
+  )}&coords=${encodeURIComponent(coords)}`
+
+  const response = await fetch(url)
 
   if (!response.ok) {
-    throw new Error(`Open-Meteo API error: ${response.statusText}`)
+    throw new Error(`USNO API error: ${response.status} ${response.statusText}`)
   }
 
   return response.json()
+}
+
+/**
+ * Converts HH:MM time string to ISO datetime string by combining with date
+ */
+function timeToISO(date: string, time: string): string {
+  // date is YYYY-MM-DD, time is HH:MM
+  return `${date}T${time}:00`
 }
 
 /**
@@ -88,23 +119,88 @@ function getSunVisibility(
 }
 
 /**
- * Converts Open-Meteo astronomy data to SkyObject array
+ * Determines moon visibility based on current time relative to moonrise/moonset
+ * Moon is visible if current time is between moonrise and moonset
  */
-export function mapAstronomyDataToSkyObjects(
-  data: OpenMeteoResponse,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getMoonVisibility(
+  moonrise: string,
+  moonset: string
+): "good" | "ok" | "poor" {
+  const now = new Date()
+  const riseTime = new Date(moonrise)
+  const setTime = new Date(moonset)
+
+  // Handle case where moonset is next day (moonset time < moonrise time)
+  if (setTime < riseTime) {
+    // Moon sets the next day, so it's visible if we're past moonrise or before moonset
+    if (now >= riseTime || now < setTime) {
+      return "good"
+    }
+    return "poor"
+  }
+
+  // Normal case: moonrise < moonset on same day
+  if (now >= riseTime && now < setTime) {
+    return "good"
+  }
+
+  // Moon is below horizon
+  return "poor"
+}
+
+/**
+ * Converts USNO astronomy data to SkyObject array
+ */
+export async function mapAstronomyDataToSkyObjects(
+  data: USNOResponse,
   date: string
-): SkyObject[] {
+): Promise<SkyObject[]> {
   const objects: SkyObject[] = []
+  console.log(data.properties.data)
 
-  // Get today's data (first element in arrays)
-  const sunrise = data.daily.sunrise[0]
-  const sunset = data.daily.sunset[0]
-  // Get tomorrow's sunrise (second element) for visibility calculation
-  const nextSunrise = data.daily.sunrise[1]
+  // Extract date in YYYY-MM-DD format
+  const formattedDate = date.split("T")[0]
 
-  // Sun object
-  if (sunrise && sunset) {
+  // Get sun rise and set times from sundata
+  const sunRiseEvent = data.properties.data.sundata.find(
+    event => event.phen === "Rise"
+  )
+  const sunSetEvent = data.properties.data.sundata.find(
+    event => event.phen === "Set"
+  )
+
+  if (sunRiseEvent && sunSetEvent) {
+    // Convert HH:MM times to ISO datetime strings
+    const sunrise = timeToISO(formattedDate, sunRiseEvent.time)
+    const sunset = timeToISO(formattedDate, sunSetEvent.time)
+
+    // Get tomorrow's sunrise for visibility calculation
+    // Calculate tomorrow's date
+    const tomorrow = new Date(formattedDate)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowDate = tomorrow.toISOString().split("T")[0]
+
+    // Fetch tomorrow's data to get next sunrise
+    let nextSunrise: string | undefined
+    try {
+      const coords = `${data.geometry.coordinates[1]},${data.geometry.coordinates[0]}`
+      const tomorrowUrl = `https://aa.usno.navy.mil/api/rstt/oneday?date=${encodeURIComponent(
+        tomorrowDate
+      )}&coords=${encodeURIComponent(coords)}`
+      const tomorrowResponse = await fetch(tomorrowUrl)
+      if (tomorrowResponse.ok) {
+        const tomorrowData: USNOResponse = await tomorrowResponse.json()
+        const tomorrowSunRiseEvent = tomorrowData.properties.data.sundata.find(
+          event => event.phen === "Rise"
+        )
+        if (tomorrowSunRiseEvent) {
+          nextSunrise = timeToISO(tomorrowDate, tomorrowSunRiseEvent.time)
+        }
+      }
+    } catch {
+      // If we can't fetch tomorrow's data, continue without it
+    }
+
     const visibility = getSunVisibility(sunset, nextSunrise)
 
     objects.push({
@@ -118,6 +214,54 @@ export function mapAstronomyDataToSkyObjects(
         sunset
       )}`,
     })
+  }
+
+  // Get moon rise and set times from moondata
+  if (data.properties.data.moondata) {
+    const moonRiseEvent = data.properties.data.moondata.find(
+      event => event.phen === "Rise"
+    )
+    const moonSetEvent = data.properties.data.moondata.find(
+      event => event.phen === "Set"
+    )
+
+    if (moonRiseEvent && moonSetEvent) {
+      // Convert HH:MM times to ISO datetime strings
+      const moonrise = timeToISO(formattedDate, moonRiseEvent.time)
+      let moonset = timeToISO(formattedDate, moonSetEvent.time)
+
+      // Handle case where moonset is next day (moonset time < moonrise time)
+      if (moonSetEvent.time < moonRiseEvent.time) {
+        const tomorrow = new Date(formattedDate)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const tomorrowDate = tomorrow.toISOString().split("T")[0]
+        moonset = timeToISO(tomorrowDate, moonSetEvent.time)
+      }
+
+      const moonVisibility = getMoonVisibility(moonrise, moonset)
+
+      // Build note with moon phase information if available
+      let moonNote = `Moonrise at ${formatTime(
+        moonrise
+      )} / Moonset at ${formatTime(moonset)}`
+      if (data.properties.data.curphase) {
+        moonNote += ` (${data.properties.data.curphase}`
+        if (data.properties.data.fracillum) {
+          moonNote += `, ${data.properties.data.fracillum} illuminated`
+        }
+        moonNote += ")"
+      }
+
+      objects.push({
+        id: "moon",
+        name: "Moon",
+        type: "other",
+        visibility: moonVisibility,
+        riseTime: moonrise,
+        setTime: moonset,
+        note: moonNote,
+      })
+    }
   }
 
   return objects

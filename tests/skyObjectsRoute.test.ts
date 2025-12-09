@@ -1,8 +1,88 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GET } from "@/app/api/sky-objects/route";
 import { NextRequest } from "next/server";
 
+// Mock fetch globally
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 describe("GET /api/sky-objects", () => {
+  let usnoCallCount: number;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    usnoCallCount = 0;
+    
+    // Default mock for geocoding API
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes("geocoding-api.open-meteo.com")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            results: [
+              {
+                id: 1,
+                name: "Denver",
+                latitude: 39.7392,
+                longitude: -104.9903,
+                admin1: "Colorado",
+                country: "United States",
+              },
+            ],
+          }),
+        });
+      }
+      
+      // Mock for USNO RSTT oneday API
+      if (url.includes("aa.usno.navy.mil/api/rstt/oneday")) {
+        usnoCallCount++;
+        
+        // First call is for today, second call (if any) is for tomorrow
+        const isTomorrow = usnoCallCount > 1;
+        
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            apiversion: "4.0.1",
+            geometry: {
+              coordinates: [-104.9903, 39.7392],
+              type: "Point",
+            },
+            properties: {
+              data: {
+                sundata: [
+                  { phen: "Begin Civil Twilight", time: isTomorrow ? "06:04" : "06:03" },
+                  { phen: "Rise", time: isTomorrow ? "06:35" : "06:34" },
+                  { phen: "Upper Transit", time: isTomorrow ? "11:09" : "11:08" },
+                  { phen: "Set", time: isTomorrow ? "15:43" : "15:42" },
+                  { phen: "End Civil Twilight", time: isTomorrow ? "16:15" : "16:14" },
+                ],
+                moondata: [
+                  { phen: "Rise", time: isTomorrow ? "08:01" : "08:00" },
+                  { phen: "Upper Transit", time: isTomorrow ? "12:21" : "12:20" },
+                  { phen: "Set", time: isTomorrow ? "16:45" : "16:44" },
+                ],
+                curphase: "Waxing Crescent",
+                fracillum: "2%",
+                day: isTomorrow ? 22 : 21,
+                month: 12,
+                year: 2025,
+                tz: -7.0,
+              },
+            },
+            type: "Feature",
+          }),
+        });
+      }
+      
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("Successful response", () => {
     it("requires 'location' query param", async () => {
       const request = new NextRequest(

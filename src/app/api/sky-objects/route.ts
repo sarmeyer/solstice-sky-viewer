@@ -44,12 +44,17 @@ export async function GET(request: NextRequest) {
       lon: geocodeResult.lon,
     }
 
-    // Step 2: Fetch astronomy data from Open-Meteo
+    // Step 2: Get current date in ISO format (YYYY-MM-DD)
+    const today = new Date()
+    const date = today.toISOString().split("T")[0]
+
+    // Step 3: Fetch astronomy data from USNO RSTT API
     let astronomyData
     try {
       astronomyData = await fetchAstronomyData(
         geocodeResult.lat,
-        geocodeResult.lon
+        geocodeResult.lon,
+        date
       )
     } catch (error) {
       const errorResponse: SkyObjectsErrorResponse = {
@@ -61,12 +66,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(errorResponse, { status: 500 })
     }
 
-    // Step 3: Get current date in ISO format (YYYY-MM-DD)
-    const today = new Date()
-    const date = today.toISOString().split("T")[0]
-
     // Step 4: Map astronomy data to SkyObjects
-    const objects = mapAstronomyDataToSkyObjects(astronomyData, date)
+    let objects
+    try {
+      objects = await mapAstronomyDataToSkyObjects(astronomyData, date)
+    } catch (error) {
+      const errorResponse: SkyObjectsErrorResponse = {
+        error: {
+          code: "UPSTREAM_ERROR",
+          message: `Failed to process astronomy data: ${error}`,
+        },
+      }
+      return NextResponse.json(errorResponse, { status: 500 })
+    }
 
     // Ensure we have at least 1 object (should always have Sun and Moon)
     if (objects.length === 0) {
