@@ -178,7 +178,6 @@ export default function SolsticeSkyViewer() {
   }
 
   return (
-    // <div class="background-container">
     <div className="background-container min-h-screen relative overflow-hidden night-sky">
       {/* Starfield background */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -186,7 +185,7 @@ export default function SolsticeSkyViewer() {
       <div className="stars"></div>
       <div className="twinkling"></div>
       <div className="clouds"></div>
-      {/* <div className="absolute inset-0 starfield" /> */}
+
       {/* Main content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-2xl">
@@ -256,7 +255,7 @@ export default function SolsticeSkyViewer() {
                   </p>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
                   {data.objects.map(obj => (
                     <div
                       key={obj.id}

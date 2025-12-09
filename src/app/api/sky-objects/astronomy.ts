@@ -54,17 +54,23 @@ interface CelnavResponse {
   }
 }
 
-/**
- * Known celestial objects to include from celnav data
- * Filters out unknown stars and objects that aren't notable
- */
-const KNOWN_OBJECTS = new Set([
-  // planets
+const PLANETS = [
   "Mercury",
   "Venus",
   "Mars",
   "Jupiter",
   "Saturn",
+  "Uranus",
+  "Neptune",
+]
+
+/**
+ * Known celestial objects to include from celnav data
+ * Filters out lesser known stars and objects
+ */
+const KNOWN_OBJECTS = new Set([
+  // planets
+  ...PLANETS,
   // constellations
   "Orion",
   "Ursa Major",
@@ -75,6 +81,9 @@ const KNOWN_OBJECTS = new Set([
   "Andromeda",
   "Perseus",
   "Taurus",
+  "Aries",
+  "Lyra",
+  "Polaris",
   "Gemini",
   "Leo",
   "Scorpius",
@@ -86,6 +95,17 @@ const KNOWN_OBJECTS = new Set([
   "Pleiades",
   // southern
   "Crux",
+  // Stars
+  "Sirius",
+  "Vega",
+  "Betelgeuse",
+  "Bellatrix",
+  "Canopus",
+  "Alpha Centauri",
+  "Arcturus",
+  "Capella",
+  "Altair",
+  "Rigel",
 ])
 
 /**
@@ -151,7 +171,6 @@ async function fetchCelnavData(
     )}`
 
     const response = await fetch(url)
-
     if (!response.ok) {
       // Log but don't throw - graceful degradation
       console.warn(
@@ -161,6 +180,7 @@ async function fetchCelnavData(
     }
 
     const data = await response.json()
+    console.log("data", data.properties.data)
     return data
   } catch (error) {
     // Log but don't throw - graceful degradation
@@ -255,16 +275,7 @@ function getObjectType(
   const name = objectName.toLowerCase()
 
   // Known planets
-  const planets = [
-    "mercury",
-    "venus",
-    "mars",
-    "jupiter",
-    "saturn",
-    "uranus",
-    "neptune",
-  ]
-  if (planets.includes(name)) {
+  if (PLANETS.includes(name)) {
     return "planet"
   }
 
@@ -273,8 +284,8 @@ function getObjectType(
     return "star"
   }
 
-  // Default to "other" for unknown objects
-  return "other"
+  // Default to "constellation" for objects that are not planets or stars
+  return "constellation"
 }
 
 /**
