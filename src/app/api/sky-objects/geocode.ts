@@ -48,7 +48,7 @@ export async function geocodeLocation(
     }
 
     const result = data.results[0]
-    console.log("geocode data", result)
+
     const parts = [result.name]
     if (result.admin1) parts.push(result.admin1)
     if (result.country) parts.push(result.country)

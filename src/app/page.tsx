@@ -245,7 +245,14 @@ export default function SolsticeSkyViewer() {
                     </span>
                   </p>
                   <p>
-                    Date: <span className="text-white">{data.date}</span>
+                    Date:{" "}
+                    <span className="text-white">
+                      {new Date(data.date).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
                   </p>
                 </div>
 
@@ -253,7 +260,7 @@ export default function SolsticeSkyViewer() {
                   {data.objects.map(obj => (
                     <div
                       key={obj.id}
-                      className="rounded-lg bg-gray-800/50 border border-gray-700 p-4 hover:bg-gray-800/70 transition-colors"
+                      className="rounded-lg bg-gray-800/50 border border-gray-700 p-4 hover:bg-gray-800/70 transition-colors relative"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="text-xl font-semibold text-white">

@@ -173,34 +173,18 @@ async function fetchCelnavData(
  * Converts HH:MM time string to ISO datetime string by combining with date
  */
 function timeToISO(date: string, time: string): string {
-  // date is YYYY-MM-DD, time is HH:MM
-  return `${date}T${time}:00`
+  return `${date}T${time}:00.000Z`
 }
 
 /**
- * Formats ISO datetime string to readable time (HH:MM)
+ * Formats ISO datetime string to readable current time (HH:MM)
  */
 function formatTime(isoString: string): string {
-  // Extract time portion from ISO string (format: YYYY-MM-DDTHH:MM or YYYY-MM-DDTHH:MM:SS)
-  const timeMatch = isoString.match(/T(\d{2}):(\d{2})/)
-  if (timeMatch) {
-    return `${timeMatch[1]}:${timeMatch[2]}`
-  }
-
-  // Fallback: try parsing as Date (for full ISO strings with timezone)
-  try {
-    const date = new Date(isoString)
-    if (!isNaN(date.getTime())) {
-      const hours = date.getUTCHours().toString().padStart(2, "0")
-      const minutes = date.getUTCMinutes().toString().padStart(2, "0")
-      return `${hours}:${minutes}`
-    }
-  } catch {
-    // Ignore parsing errors
-  }
-
-  // If all else fails, return the original string
-  return isoString
+  return new Date(isoString).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
 }
 
 /**
@@ -450,8 +434,6 @@ export async function mapAstronomyDataToSkyObjects(
   date: string
 ): Promise<SkyObject[]> {
   const objects: SkyObject[] = []
-  console.log(data.properties.data)
-
   // Extract date in YYYY-MM-DD format
   const formattedDate = date.split("T")[0]
 
@@ -487,9 +469,15 @@ export async function mapAstronomyDataToSkyObjects(
   )
 
   if (sunRiseEvent && sunSetEvent) {
+    // sunRiseEvent { phen: 'Rise', time: '14:15' }
+    // sunSetEvent { phen: 'Set', time: '23:44' }
+
     // Convert HH:MM times to ISO datetime strings
     const sunrise = timeToISO(formattedDate, sunRiseEvent.time)
     const sunset = timeToISO(formattedDate, sunSetEvent.time)
+
+    // sunrise 2025-12-09T14:15:00
+    // sunset 2025-12-09T23:44:00
 
     // Get tomorrow's sunrise for visibility calculation
     // Calculate tomorrow's date

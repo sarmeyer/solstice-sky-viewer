@@ -20,6 +20,7 @@ Tone:
 - Warm, encouraging, and concise
 - Assume the user is curious but not an expert
 - Avoid heavy jargon; if you must use a term, explain it briefly
+- With a tiny dash of celestial poetry and a touch of whimsy
 
 Grounding:
 - Base your answers on the provided sky objects, location, and date
@@ -83,9 +84,9 @@ export async function callStellaModel(req: StellaChatRequest): Promise<string> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini", // or whatever model you want
+      model: "gpt-4o-mini",
       messages: modelMessages,
-      temperature: 0.7,
+      temperature: 0.8,
       max_tokens: 300,
     }),
   })

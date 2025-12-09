@@ -77,28 +77,25 @@ export default function Stella({ onClick }: StellaProps) {
           />
         </svg>
 
-        {/* Sparkle effect on hover */}
-        {isHovered && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 w-1 h-1 bg-yellow-200 rounded-full animate-ping" />
-            <div
-              className="absolute top-1/4 left-0 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
-              style={{ animationDelay: "0.2s" }}
-            />
-            <div
-              className="absolute top-1/4 right-0 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
-              style={{ animationDelay: "0.4s" }}
-            />
-            <div
-              className="absolute bottom-1/4 left-1/4 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
-              style={{ animationDelay: "0.6s" }}
-            />
-            <div
-              className="absolute bottom-1/4 right-1/4 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
-              style={{ animationDelay: "0.8s" }}
-            />
-          </div>
-        )}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 w-1 h-1 bg-yellow-200 rounded-full animate-ping" />
+          <div
+            className="absolute top-1/4 left-0 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
+            style={{ animationDelay: "0.2s" }}
+          />
+          <div
+            className="absolute top-1/4 right-0 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
+            style={{ animationDelay: "0.4s" }}
+          />
+          <div
+            className="absolute bottom-1/5 left-1/6 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
+            style={{ animationDelay: "0.6s" }}
+          />
+          <div
+            className="absolute bottom-1/6 right-1/5 w-1 h-1 bg-yellow-200 rounded-full animate-ping"
+            style={{ animationDelay: "0.8s" }}
+          />
+        </div>
       </div>
 
       {/* Tooltip */}
