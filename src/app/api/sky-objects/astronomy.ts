@@ -34,41 +34,57 @@ export async function fetchAstronomyData(
 }
 
 /**
- * Gets moon phase description from phase value
- * Open-Meteo moon_phase values:
- * - 0 = New Moon
- * - 0.25 = First Quarter
- * - 0.5 = Full Moon
- * - 0.75 = Last Quarter
- */
-function getMoonPhaseDescription(phase: number): string {
-  if (phase < 0.125) return "New Moon"
-  if (phase < 0.375) return "Waxing Crescent"
-  if (phase < 0.625) return phase < 0.5 ? "First Quarter" : "Waxing Gibbous"
-  if (phase < 0.875) return phase < 0.75 ? "Full Moon" : "Waning Gibbous"
-  return "Last Quarter"
-}
-
-/**
- * Determines moon visibility based on phase
- */
-function getMoonVisibility(phase: number): "good" | "ok" | "poor" {
-  // Full moon and waxing/waning gibbous are most visible
-  if (phase > 0.4 && phase < 0.6) return "good" // Full moon
-  if ((phase > 0.25 && phase < 0.5) || (phase > 0.5 && phase < 0.75))
-    return "good" // Gibbous phases
-  if (phase > 0.1 && phase < 0.9) return "ok" // Quarter and crescent
-  return "poor" // New moon
-}
-
-/**
  * Formats ISO datetime string to readable time (HH:MM)
  */
 function formatTime(isoString: string): string {
-  const date = new Date(isoString)
-  const hours = date.getUTCHours().toString().padStart(2, "0")
-  const minutes = date.getUTCMinutes().toString().padStart(2, "0")
-  return `${hours}:${minutes}`
+  // Extract time portion from ISO string (format: YYYY-MM-DDTHH:MM or YYYY-MM-DDTHH:MM:SS)
+  const timeMatch = isoString.match(/T(\d{2}):(\d{2})/)
+  if (timeMatch) {
+    return `${timeMatch[1]}:${timeMatch[2]}`
+  }
+
+  // Fallback: try parsing as Date (for full ISO strings with timezone)
+  try {
+    const date = new Date(isoString)
+    if (!isNaN(date.getTime())) {
+      const hours = date.getUTCHours().toString().padStart(2, "0")
+      const minutes = date.getUTCMinutes().toString().padStart(2, "0")
+      return `${hours}:${minutes}`
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+
+  // If all else fails, return the original string
+  return isoString
+}
+
+/**
+ * Determines sun visibility based on current time relative to sunset/sunrise
+ * If past sunset but before next sunrise, visibility is "poor"
+ */
+function getSunVisibility(
+  sunset: string,
+  nextSunrise: string | undefined
+): "good" | "poor" {
+  const now = new Date()
+  const sunsetTime = new Date(sunset)
+  const nextSunriseTime = nextSunrise ? new Date(nextSunrise) : null
+
+  // If we're past sunset
+  if (now > sunsetTime) {
+    // Check if we're before the next sunrise
+    if (nextSunriseTime && now < nextSunriseTime) {
+      return "poor" // Sun is below horizon
+    }
+    // If no next sunrise data, assume we're in night (poor visibility)
+    if (!nextSunriseTime) {
+      return "poor"
+    }
+  }
+
+  // Sun is above horizon or we don't have enough data
+  return "good"
 }
 
 /**
@@ -76,6 +92,7 @@ function formatTime(isoString: string): string {
  */
 export function mapAstronomyDataToSkyObjects(
   data: OpenMeteoResponse,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   date: string
 ): SkyObject[] {
   const objects: SkyObject[] = []
@@ -83,14 +100,18 @@ export function mapAstronomyDataToSkyObjects(
   // Get today's data (first element in arrays)
   const sunrise = data.daily.sunrise[0]
   const sunset = data.daily.sunset[0]
+  // Get tomorrow's sunrise (second element) for visibility calculation
+  const nextSunrise = data.daily.sunrise[1]
 
   // Sun object
   if (sunrise && sunset) {
+    const visibility = getSunVisibility(sunset, nextSunrise)
+
     objects.push({
       id: "sun",
       name: "Sun",
-      type: "other",
-      visibility: "good",
+      type: "star",
+      visibility,
       riseTime: sunrise,
       setTime: sunset,
       note: `Sunrise at ${formatTime(sunrise)} / Sunset at ${formatTime(
@@ -98,24 +119,6 @@ export function mapAstronomyDataToSkyObjects(
       )}`,
     })
   }
-
-  // Moon object
-  // if (moonrise && moonset) {
-  //   const phaseDesc = getMoonPhaseDescription(moonPhase)
-  //   const visibility = getMoonVisibility(moonPhase)
-
-  //   objects.push({
-  //     id: "moon",
-  //     name: "Moon",
-  //     type: "other",
-  //     visibility,
-  //     riseTime: moonrise,
-  //     setTime: moonset,
-  //     note: `Moonrise at ${formatTime(moonrise)} / Moonset at ${formatTime(
-  //       moonset
-  //     )} / Phase: ${phaseDesc}`,
-  //   })
-  // }
 
   return objects
 }

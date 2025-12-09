@@ -87,30 +87,30 @@ function SolsticeCountdown({ lat, lon }: { lat?: number; lon?: number }) {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-20 rounded-lg bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-4 shadow-lg">
-      <div className="text-xs text-gray-400 mb-2">Winter Solstice</div>
-      <div className="flex gap-3 text-white">
+    <div className="fixed bottom-4 left-4 z-20 rounded-lg bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 shadow-lg">
+      <div className="text-sm text-gray-400 mb-3">Winter Solstice</div>
+      <div className="flex gap-4 text-white">
         <div className="text-center">
-          <div className="text-2xl font-bold">{countdown.days}</div>
-          <div className="text-xs text-gray-400">days</div>
+          <div className="text-4xl font-bold">{countdown.days}</div>
+          <div className="text-sm text-gray-400">days</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold">
+          <div className="text-4xl font-bold">
             {countdown.hours.toString().padStart(2, "0")}
           </div>
-          <div className="text-xs text-gray-400">hours</div>
+          <div className="text-sm text-gray-400">hours</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold">
+          <div className="text-4xl font-bold">
             {countdown.minutes.toString().padStart(2, "0")}
           </div>
-          <div className="text-xs text-gray-400">min</div>
+          <div className="text-sm text-gray-400">min</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold">
+          <div className="text-4xl font-bold">
             {countdown.seconds.toString().padStart(2, "0")}
           </div>
-          <div className="text-xs text-gray-400">sec</div>
+          <div className="text-sm text-gray-400">sec</div>
         </div>
       </div>
     </div>
