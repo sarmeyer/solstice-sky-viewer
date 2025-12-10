@@ -290,7 +290,7 @@ export default function SolsticeSkyViewer() {
   }
 
   return (
-    <div className="background-container min-h-screen relative overflow-hidden overflow-y-scroll night-sky">
+    <div className="background-container min-h-screen relative overflow-hidden overflow-y-scroll md:overflow-hidden night-sky">
       {/* Starfield background */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/moon.png" alt="moon" />
@@ -370,7 +370,7 @@ export default function SolsticeSkyViewer() {
                   </p>
                 </div>
 
-                <div className="space-y-3 md:max-h-[400px] sm:min-h-fit overflow-y-auto">
+                <div className="space-y-3 md:max-h-[450px] sm:min-h-fit md:min-h-[450px] overflow-y-auto hide-scrollbars">
                   {data.objects
                     .filter(obj => obj.id !== "sun" && obj.id !== "moon")
                     .map(obj => (

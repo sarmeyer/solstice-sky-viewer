@@ -60,6 +60,10 @@ body {
   }
 }
 
+.hide-scrollbars::-webkit-scrollbar {
+  display: none;
+}
+
 .background-container {
   position: fixed;
   top: 0;
