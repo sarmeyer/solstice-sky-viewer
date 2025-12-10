@@ -1,4 +1,4 @@
-# Solstice Sky Viewer
+# 💫 ✨ Solstice Sky Viewer ✨ 💫
 
 A stargazing web application that helps you discover what's visible in the night
 sky. Enter your location to see a personalized list of celestial objects
