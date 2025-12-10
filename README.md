@@ -10,7 +10,7 @@ celestial facts, and get tips for finding them in the sky.
 ## Features
 
 - **Location-based sky object discovery**: Enter any location to see what's
-  visible in the night sky
+  visible in the night sky (eg. Paris, Aspen, New York, etc)
 - **Real-time astronomical data**: Fetches data from USNO (U.S. Naval
   Observatory) APIs for accurate sun, moon, and celestial object information
 - **Interactive AI guide**: Chat with Stella, an AI assistant that explains sky
