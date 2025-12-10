@@ -265,6 +265,7 @@ export default function SolsticeSkyViewer() {
 
       const successData: SkyObjectsResponse = await response.json()
       setData(successData)
+      window.scrollTo(0, 0)
       setState("success")
     } catch (err) {
       setError("Failed to fetch sky objects. Please try again: " + err)
@@ -290,7 +291,7 @@ export default function SolsticeSkyViewer() {
   }
 
   return (
-    <div className="background-container min-h-screen relative overflow-hidden overflow-y-scroll md:overflow-hidden night-sky">
+    <div className="background-container min-h-screen relative overflow-hidden overflow-y-scroll night-sky">
       {/* Starfield background */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/moon.png" alt="moon" />

@@ -15,7 +15,7 @@ export default function Stella({ onClick }: StellaProps) {
 
   return (
     <div
-      className="fixed top-7 left-4 z-30 cursor-pointer transition-transform hover:scale-110"
+      className="fixed top-7 left-4 z-30 cursor-pointer transition-transform hover:scale-110 flex md:block"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -100,7 +100,7 @@ export default function Stella({ onClick }: StellaProps) {
 
       {/* Tooltip */}
       <div
-        className={`absolute top-full right-0 left-2 px-2 py-2 rounded-lg bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white text-sm whitespace-nowrap transition-opacity duration-300 ${
+        className={`max-h-fit ml-2 md:absolute md:top-full md:right-0 left-2 px-2 py-2 rounded-lg bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white text-sm whitespace-nowrap transition-opacity duration-300 opacity-100 md:opacity-0 ${
           isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
