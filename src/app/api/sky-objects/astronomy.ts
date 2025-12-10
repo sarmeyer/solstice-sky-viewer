@@ -178,9 +178,11 @@ async function fetchCelnavData(
     console.log("data", data.properties.data)
 
     // normalize the object name
-    data.properties.data.forEach(item => {
-      item.object = item.object.toLowerCase()
-    })
+    data.properties.data.forEach(
+      (item: CelnavResponse["properties"]["data"][number]) => {
+        item.object = item.object.toLowerCase()
+      }
+    )
 
     return data
   } catch (error) {
