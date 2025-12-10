@@ -121,9 +121,26 @@ body {
 }
 
 img {
-  height: 50vh;
-  width: 50vh;
+  height: 25vh;
+  width: 25vh;
   position: absolute;
   z-index: 3;
-  right: 20px;
+  right: 10px;
+  top: 10px;
+}
+
+@media (min-width: 640px) {
+  img {
+    height: 40vh;
+    width: 40vh;
+    right: 20px;
+    top: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  img {
+    height: 50vh;
+    width: 50vh;
+  }
 }

@@ -67,9 +67,31 @@ function calculateCountdown(): CountdownTime | null {
 }
 
 /**
- * Countdown Timer Component
+ * Formats a time string for display
  */
-function SolsticeCountdown({ lat, lon }: { lat?: number; lon?: number }) {
+function formatTimeDisplay(timeString: string): string {
+  const date = new Date(timeString)
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+}
+
+/**
+ * Countdown Timer Component with Sun and Moon information
+ */
+function SolsticeCountdown({
+  lat,
+  lon,
+  sun,
+  moon,
+}: {
+  lat?: number
+  lon?: number
+  sun?: SkyObject
+  moon?: SkyObject
+}) {
   const [countdown, setCountdown] = useState<CountdownTime | null>(null)
 
   useEffect(() => {
@@ -84,37 +106,127 @@ function SolsticeCountdown({ lat, lon }: { lat?: number; lon?: number }) {
     return () => clearInterval(interval)
   }, [lat, lon])
 
-  if (!countdown) {
-    return null
+  const getVisibilityColor = (visibility: SkyObject["visibility"]) => {
+    switch (visibility) {
+      case "good":
+        return "text-green-400"
+      case "ok":
+        return "text-yellow-400"
+      case "poor":
+        return "text-red-400"
+      default:
+        return "text-gray-400"
+    }
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-20 rounded-lg bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-6 shadow-lg">
-      <div className="text-sm text-gray-400 mb-3">Winter Solstice</div>
-      <div className="flex gap-4 text-white">
-        <div className="text-center">
-          <div className="text-4xl font-bold">{countdown.days}</div>
-          <div className="text-sm text-gray-400">days</div>
-        </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold">
-            {countdown.hours.toString().padStart(2, "0")}
+    <div className="w-full max-w-2xl bottom-5 z-20 rounded-lg bg-gray-900/80 backdrop-blur-sm border border-gray-800 p-3 sm:p-6 shadow-lg">
+      {/* Countdown Section */}
+      {countdown && (
+        <div className="mb-4 sm:mb-6">
+          <div className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
+            Winter Solstice Countdown
           </div>
-          <div className="text-sm text-gray-400">hours</div>
-        </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold">
-            {countdown.minutes.toString().padStart(2, "0")}
+          <div className="flex gap-2 sm:gap-4 text-white">
+            <div className="text-center flex-1">
+              <div className="text-2xl sm:text-4xl font-bold">
+                {countdown.days}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">days</div>
+            </div>
+            <div className="text-center flex-1">
+              <div className="text-2xl sm:text-4xl font-bold">
+                {countdown.hours.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">hours</div>
+            </div>
+            <div className="text-center flex-1">
+              <div className="text-2xl sm:text-4xl font-bold">
+                {countdown.minutes.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">min</div>
+            </div>
+            <div className="text-center flex-1">
+              <div className="text-2xl sm:text-4xl font-bold">
+                {countdown.seconds.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-400">sec</div>
+            </div>
           </div>
-          <div className="text-sm text-gray-400">min</div>
         </div>
-        <div className="text-center">
-          <div className="text-4xl font-bold">
-            {countdown.seconds.toString().padStart(2, "0")}
-          </div>
-          <div className="text-sm text-gray-400">sec</div>
+      )}
+
+      {/* Sun and Moon Section */}
+      {(sun || moon) && (
+        <div className="space-y-3 border-t border-gray-700 pt-3 sm:pt-4">
+          {sun && (
+            <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-2 sm:p-3">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-white">
+                  {sun.name}
+                </h3>
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium ${getVisibilityColor(
+                    sun.visibility
+                  )} bg-gray-700/50 shrink-0`}
+                >
+                  {sun.visibility.toUpperCase()}
+                </span>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-300 space-y-0.5">
+                <p>
+                  Sunrise:{" "}
+                  <span className="text-white">
+                    {formatTimeDisplay(sun.riseTime)}
+                  </span>
+                </p>
+                <p>
+                  Sunset:{" "}
+                  <span className="text-white">
+                    {formatTimeDisplay(sun.setTime)}
+                  </span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {moon && (
+            <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-2 sm:p-3">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <h3 className="text-sm sm:text-base font-semibold text-white">
+                  {moon.name}
+                </h3>
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium ${getVisibilityColor(
+                    moon.visibility
+                  )} bg-gray-700/50 shrink-0`}
+                >
+                  {moon.visibility.toUpperCase()}
+                </span>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-300 space-y-0.5">
+                <p>
+                  Moonrise:{" "}
+                  <span className="text-white">
+                    {formatTimeDisplay(moon.riseTime)}
+                  </span>
+                </p>
+                <p>
+                  Moonset:{" "}
+                  <span className="text-white">
+                    {formatTimeDisplay(moon.setTime)}
+                  </span>
+                </p>
+                {moon.note.includes("illuminated") && (
+                  <p className="text-gray-400 mt-1">
+                    {moon.note.split("(")[1]?.replace(")", "")}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -187,30 +299,30 @@ export default function SolsticeSkyViewer() {
       <div className="clouds"></div>
 
       {/* Main content */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
+      <div className="relative z-10 flex flex-col gap-5 min-h-screen items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-2xl">
-          <div className="rounded-2xl bg-gray-900/90 backdrop-blur-sm border border-gray-800 p-8 shadow-2xl">
-            <h1 className="text-4xl font-bold text-white mb-2 text-center">
+          <div className="rounded-2xl bg-gray-900/90 backdrop-blur-sm border border-gray-800 p-4 sm:p-8 shadow-2xl">
+            <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 text-center">
               Solstice Sky Viewer
             </h1>
-            <p className="text-gray-300 text-center mb-8">
+            <p className="text-sm sm:text-base text-gray-300 text-center mb-6 sm:mb-8">
               See a few bright objects visible in tonight&apos;s sky.
             </p>
 
             <form onSubmit={handleSubmit} className="mb-6">
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="text"
                   value={location}
                   onChange={e => setLocation(e.target.value)}
                   placeholder="Enter city, state, zipcode, or country"
-                  className="flex-1 px-4 py-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   disabled={state === "loading"}
                 />
                 <button
                   type="submit"
                   disabled={state === "loading"}
-                  className="px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base whitespace-nowrap"
                 >
                   {state === "loading" ? "Loading..." : "View sky"}
                 </button>
@@ -236,7 +348,7 @@ export default function SolsticeSkyViewer() {
             {/* Success state */}
             {state === "success" && data && (
               <div className="space-y-4">
-                <div className="text-sm text-gray-400 mb-4">
+                <div className="text-xs sm:text-sm text-gray-400 mb-4">
                   <p>
                     Location:{" "}
                     <span className="text-white">
@@ -255,41 +367,50 @@ export default function SolsticeSkyViewer() {
                   </p>
                 </div>
 
-                <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                  {data.objects.map(obj => (
-                    <div
-                      key={obj.id}
-                      className="rounded-lg bg-gray-800/50 border border-gray-700 p-4 hover:bg-gray-800/70 transition-colors relative"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-xl font-semibold text-white">
-                          {obj.name}
-                        </h3>
-                        <div className="flex gap-2">
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-gray-700 text-gray-300">
-                            {getTypeLabel(obj.type)}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getVisibilityColor(
-                              obj.visibility
-                            )} bg-gray-700/50`}
-                          >
-                            {obj.visibility.toUpperCase()}
-                          </span>
+                <div className="space-y-3 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
+                  {data.objects
+                    .filter(obj => obj.id !== "sun" && obj.id !== "moon")
+                    .map(obj => (
+                      <div
+                        key={obj.id}
+                        className="rounded-lg bg-gray-800/50 border border-gray-700 p-3 sm:p-4 hover:bg-gray-800/70 transition-colors relative"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <h3 className="text-lg sm:text-xl font-semibold text-white">
+                            {obj.name.charAt(0).toUpperCase() +
+                              obj.name.slice(1)}
+                          </h3>
+                          <div className="flex gap-2 shrink-0">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-gray-700 text-gray-300">
+                              {getTypeLabel(obj.type)}
+                            </span>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${getVisibilityColor(
+                                obj.visibility
+                              )} bg-gray-700/50`}
+                            >
+                              {obj.visibility.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
+                        <p className="text-gray-300 text-xs sm:text-sm">
+                          {obj.note}
+                        </p>
                       </div>
-                      <p className="text-gray-300 text-sm">{obj.note}</p>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
           </div>
         </div>
+        {/* Countdown Timer with Sun and Moon */}
+        <SolsticeCountdown
+          lat={data?.location.lat}
+          lon={data?.location.lon}
+          sun={data?.objects.find(obj => obj.id === "sun")}
+          moon={data?.objects.find(obj => obj.id === "moon")}
+        />
       </div>
-
-      {/* Countdown Timer */}
-      <SolsticeCountdown lat={data?.location.lat} lon={data?.location.lon} />
 
       {/* Stella - only show after successful sky objects fetch */}
       {state === "success" && data && (
@@ -307,7 +428,7 @@ export default function SolsticeSkyViewer() {
 
       {/* Credit line */}
       <div
-        className="fixed right-4 z-20"
+        className="fixed right-2 sm:right-4 z-20 hidden sm:block"
         style={{
           bottom: "16px",
         }}

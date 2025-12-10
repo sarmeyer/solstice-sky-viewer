@@ -55,13 +55,13 @@ interface CelnavResponse {
 }
 
 const PLANETS = [
-  "Mercury",
-  "Venus",
-  "Mars",
-  "Jupiter",
-  "Saturn",
-  "Uranus",
-  "Neptune",
+  "mercury",
+  "venus",
+  "mars",
+  "jupiter",
+  "saturn",
+  "uranus",
+  "neptune",
 ]
 
 /**
@@ -69,43 +69,38 @@ const PLANETS = [
  * Filters out lesser known stars and objects
  */
 const KNOWN_OBJECTS = new Set([
-  // planets
   ...PLANETS,
-  // constellations
-  "Orion",
-  "Ursa Major",
-  "Ursa Minor",
-  "Cassiopeia",
-  "Cygnus",
-  "Lyra",
-  "Andromeda",
-  "Perseus",
-  "Taurus",
-  "Aries",
-  "Lyra",
-  "Polaris",
-  "Gemini",
-  "Leo",
-  "Scorpius",
-  "Sagittarius",
-  "Pegasus",
-  // asterisms/clusters
-  "Big Dipper",
-  "Orion's Belt",
-  "Pleiades",
-  // southern
-  "Crux",
-  // Stars
-  "Sirius",
-  "Vega",
-  "Betelgeuse",
-  "Bellatrix",
-  "Canopus",
-  "Alpha Centauri",
-  "Arcturus",
-  "Capella",
-  "Altair",
-  "Rigel",
+  "orion",
+  "ursa major",
+  "ursa minor",
+  "cassiopeia",
+  "cygnus",
+  "lyra",
+  "andromeda",
+  "perseus",
+  "taurus",
+  "aries",
+  "lyra",
+  "polaris",
+  "gemini",
+  "leo",
+  "scorpius",
+  "sagittarius",
+  "pegasus",
+  "big dipper",
+  "orion's belt",
+  "pleiades",
+  "crux",
+  "sirius",
+  "vega",
+  "betelgeuse",
+  "bellatrix",
+  "canopus",
+  "alpha centauri",
+  "arcturus",
+  "capella",
+  "altair",
+  "rigel",
 ])
 
 /**
@@ -181,6 +176,12 @@ async function fetchCelnavData(
 
     const data = await response.json()
     console.log("data", data.properties.data)
+
+    // normalize the object name
+    data.properties.data.forEach(item => {
+      item.object = item.object.toLowerCase()
+    })
+
     return data
   } catch (error) {
     // Log but don't throw - graceful degradation
@@ -272,10 +273,8 @@ function getObjectType(
   objectName: string,
   navStarNumber?: number
 ): "star" | "planet" | "constellation" | "other" {
-  const name = objectName.toLowerCase()
-
   // Known planets
-  if (PLANETS.includes(name)) {
+  if (PLANETS.includes(objectName)) {
     return "planet"
   }
 
@@ -384,20 +383,16 @@ function mapCelnavObjectsToSkyObjects(
   }
 
   for (const item of celnavData.properties.data) {
-    // Skip Sun and Moon as they're already handled by the RSTT API
+    // Skip Sun as it's already handled by the RSTT API
     const objectName = item.object
-    if (
-      !objectName ||
-      objectName.toLowerCase() === "sun" ||
-      objectName.toLowerCase() === "moon"
-    ) {
+    if (!objectName || objectName === "sun") {
       continue
     }
 
     // Only include known objects from our curated list (case-insensitive)
     const normalizedName = objectName.trim()
     const isKnown = Array.from(KNOWN_OBJECTS).some(
-      known => known.toLowerCase() === normalizedName.toLowerCase()
+      known => known === normalizedName
     )
     if (!isKnown) {
       continue
@@ -421,7 +416,7 @@ function mapCelnavObjectsToSkyObjects(
     }
 
     // Create a simple ID from the object name
-    const id = objectName.toLowerCase().replace(/\s+/g, "-")
+    const id = objectName.replace(/\s+/g, "-")
 
     objects.push({
       id,

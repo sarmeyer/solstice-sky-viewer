@@ -15,7 +15,7 @@ export default function Stella({ onClick }: StellaProps) {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-30 cursor-pointer transition-transform hover:scale-110"
+      className="fixed top-5 left-4 z-30 cursor-pointer transition-transform hover:scale-110"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -26,10 +26,10 @@ export default function Stella({ onClick }: StellaProps) {
       <div className="relative">
         {/* Star shape */}
         <svg
-          width="120"
-          height="120"
+          width="80"
+          height="80"
           viewBox="0 0 100 100"
-          className={`transition-all duration-300 ${
+          className={`w-20 h-20 sm:w-[120px] sm:h-[120px] transition-all duration-300 ${
             isHovered
               ? "drop-shadow-[0_0_20px_rgba(244,208,63,0.6)]"
               : "drop-shadow-[0_0_10px_rgba(244,208,63,0.4)]"
