@@ -300,7 +300,7 @@ export default function SolsticeSkyViewer() {
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col gap-5 min-h-screen items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-2xl md:mt-auto mt-[100px]">
+        <div className="w-full max-w-2xl md:mt-0 mt-[100px]">
           <div className="rounded-2xl bg-gray-900/90 backdrop-blur-sm border border-gray-800 p-4 sm:p-8 shadow-2xl">
             <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 text-center">
               Solstice Sky Viewer

@@ -126,7 +126,7 @@ export default function StellaChatWindow({
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
       {/* Chat Window */}
-      <div className="fixed bottom-24 right-4 w-96 h-[500px] z-50 rounded-2xl bg-gray-900/95 border border-gray-800 shadow-2xl flex flex-col">
+      <div className="fixed top-40 left-4 w-96 h-[500px] z-50 rounded-2xl bg-gray-900/95 border border-gray-800 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <div className="flex items-center gap-3">
