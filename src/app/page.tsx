@@ -333,7 +333,7 @@ export default function SolsticeSkyViewer() {
             {state === "loading" && (
               <div className="text-center py-8">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                <p className="text-gray-400 mt-4">Looking up the sky...</p>
+                <p className="text-gray-400 mt-4">Looking up at the sky...</p>
               </div>
             )}
 
