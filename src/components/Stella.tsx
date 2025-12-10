@@ -105,7 +105,6 @@ export default function Stella({ onClick }: StellaProps) {
         }`}
       >
         Hi! I&apos;m Stella 🌟
-        <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-700" />
       </div>
     </div>
   )
