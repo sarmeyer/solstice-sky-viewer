@@ -175,7 +175,6 @@ async function fetchCelnavData(
     }
 
     const data = await response.json()
-    console.log("data", data.properties.data)
 
     // normalize the object name
     data.properties.data.forEach(
