@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, FormEvent, useEffect } from "react"
+import { useState, FormEvent, useEffect, useRef } from "react"
 import type {
   SkyObjectsResponse,
   SkyObjectsErrorResponse,
@@ -237,6 +237,11 @@ export default function SolsticeSkyViewer() {
   const [data, setData] = useState<SkyObjectsResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [contentHeight, setContentHeight] = useState<number | undefined>(
+    undefined
+  )
+  const contentRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -290,17 +295,76 @@ export default function SolsticeSkyViewer() {
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
 
+  // Use ResizeObserver to track content height and update background elements
+  useEffect(() => {
+    const updateHeight = () => {
+      // Get the full scroll height - check multiple sources to ensure accuracy
+      const height = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        containerRef.current?.scrollHeight || 0,
+        contentRef.current?.scrollHeight || 0,
+        window.innerHeight
+      )
+      setContentHeight(height)
+    }
+
+    // Initial height calculation - delay to ensure DOM is ready
+    const initialTimeout = setTimeout(updateHeight, 100)
+
+    // Create ResizeObserver to watch for content size changes
+    const resizeObserver = new ResizeObserver(() => {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(updateHeight)
+    })
+
+    // Observe the container and content
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current)
+    }
+    resizeObserver.observe(document.body)
+
+    // Also listen for window resize and scroll
+    window.addEventListener("resize", updateHeight)
+    window.addEventListener("scroll", updateHeight, { passive: true })
+
+    return () => {
+      clearTimeout(initialTimeout)
+      resizeObserver.disconnect()
+      window.removeEventListener("resize", updateHeight)
+      window.removeEventListener("scroll", updateHeight)
+    }
+  }, [data, state]) // Re-run when data or state changes
+
   return (
-    <div className="background-container min-h-screen relative overflow-hidden overflow-y-scroll night-sky">
-      {/* Starfield background */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/moon.png" alt="moon" />
-      <div className="stars"></div>
-      <div className="twinkling"></div>
-      <div className="clouds"></div>
+    <div ref={containerRef} className="relative min-h-screen">
+      <div
+        className="background-container night-sky overflow-hidden"
+        style={{ height: contentHeight || "100vh" }}
+      >
+        {/* Starfield background */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/moon.png" alt="moon" />
+        <div
+          className="stars"
+          style={{ height: contentHeight || "100vh" }}
+        ></div>
+        <div
+          className="twinkling"
+          style={{ height: contentHeight || "100vh" }}
+        ></div>
+        <div
+          className="clouds"
+          style={{ height: contentHeight || "100vh" }}
+        ></div>
+      </div>
 
       {/* Main content */}
       <div
+        ref={contentRef}
         className="relative z-10 flex flex-col gap-5 min-h-screen items-center justify-center p-4 sm:p-8"
         id="main-content"
       >
@@ -371,7 +435,7 @@ export default function SolsticeSkyViewer() {
                   </p>
                 </div>
 
-                <div className="space-y-3 md:max-h-[450px] sm:min-h-fit md:min-h-[450px] overflow-y-auto hide-scrollbars">
+                <div className="space-y-3 md:max-h-[400px] sm:min-h-fit md:min-h-[400px] overflow-y-auto hide-scrollbars">
                   {data.objects
                     .filter(obj => obj.id !== "sun" && obj.id !== "moon")
                     .map(obj => (

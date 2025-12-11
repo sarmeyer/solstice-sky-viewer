@@ -100,8 +100,8 @@ export default function Stella({ onClick }: StellaProps) {
 
       {/* Tooltip */}
       <div
-        className={`max-h-fit ml-2 md:absolute md:top-full md:right-0 left-2 px-2 py-2 rounded-lg bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white text-sm whitespace-nowrap transition-opacity duration-300 opacity-100 md:opacity-0 ${
-          isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+        className={`max-h-fit ml-2 md:ml-auto md:absolute md:top-full md:right-0 left-2 px-2 py-2 rounded-lg bg-gray-900/90 backdrop-blur-sm border border-gray-700 text-white text-sm whitespace-nowrap transition-opacity duration-300 opacity-100 md:opacity-0 ${
+          isHovered ? "md:opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
         Hi! I&apos;m Stella 🌟
